@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milk Management System - Mobile Responsive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* LOGIN SCREEN */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 90vh;
+            padding: 20px;
+        }
+
+        .login-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .role-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        .role-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary { background: #2196F3; }
+        .btn-secondary:hover { background: #1976D2; }
+        .btn-danger { background: #f44336; }
+        .btn-danger:hover { background: #d32f2f; }
+        .btn-small { width: auto; padding: 8px 16px; font-size: 14px; margin: 2px; }
+
+        .link-btn {
+            background: none;
+            border: none;
+            color: #2196F3;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+            width: auto;
+            padding: 0;
+        }
+
+        /* DASHBOARD */
+        .dashboard { display: none; padding: 20px; }
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            margin: -20px -20px 25px -20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header h1 { font-size: 20px; margin: 0; }
+        .header small { opacity: 0.9; font-size: 14px; }
+
+        .logout {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout:hover { background: rgba(255,255,255,0.3); }
+
+        /* SECTIONS */
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        /* FLEX LAYOUTS */
+        .flex { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* STATS CARDS */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        /* RESPONSIVE 2-COLUMN LAYOUT */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 900px) {
+            .two-column {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* TABLES */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        th {
+            background: #4CAF50;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover { background: #f8f9ff; }
+
+        .clickable-name {
+            color: #2196F3;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        /* MOBILE TABLE RESPONSIVE */
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                border: 1px solid #ddd;
+                margin-bottom: 15px;
+                padding: 15px;
+                border-radius: 10px;
+                background: white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                text-align: right;
+            }
+            td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 15px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: 600;
+                color: #555;
+            }
+        }
+
+        /* HIDDEN */
+        .hidden { display: none !important; }
+
+        /* CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* MOBILE SPECIFIC */
+        @media (max-width: 480px) {
+            body { padding: 5px; }
+            .login-form { padding: 20px; margin: 10px; }
+            .dashboard { padding: 15px; }
+            .header { padding: 15px; margin: -15px -15px 20px; }
+            .section { padding: 15px; }
+            .stat-number { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="container">
+        <div class="login-container">
+            <div class="login-form">
+                <h2 style="text-align:center; margin-bottom:25px; color:#333;">🥛 Milk Management System</h2>
+                <div class="role-selector">
+                    <button class="role-btn active" onclick="selectRole(event,'admin')">👨‍💼 Admin</button>
+                    <button class="role-btn" onclick="selectRole(event,'customer')">👤 Customer</button>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label id="roleLabel">Admin Username</label>
+                        <input type="text" id="username" placeholder="Enter username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn">Login 🔐</button>
+                </form>
+                <div id="forgotPasswordBox">
+                    <button class="link-btn" onclick="showAdminReset()">Forgot Password?</button>
+                    <div id="adminResetPanel" class="hidden">
+                        <small style="color:#666; display:block; margin-bottom:10px;">Secret Code: 1234</small>
+                        <div class="form-group">
+                            <input type="password" id="adminSecret" placeholder="Enter secret code">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="newAdminPass" placeholder="New admin password">
+                        </div>
+                        <button class="btn btn-secondary" onclick="resetAdminPassword()">Reset Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDashboard" class="container dashboard">
+        <div class="header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <small id="todayDate">Today</small>
+            </div>
+            <div class="logout" onclick="logout()">Logout 🚪</div>
+        </div>
+
+        <div class="section">
+            <h3>⚙️ Controls</h3>
+            <div class="flex">
+                <div style="flex:1; min-width: 200px;">
+                    <label>Milk Rate (₹/L)</label>
+                    <input type="number" id="milkRate" placeholder="Enter rate" step="0.01">
+                    <button class="btn btn-secondary btn-small" onclick="updateMilkRate()">Update Rate</button>
+                    <span id="currentRate" style="font-weight:600; color:#4CAF50; font-size:18px;">₹60.00</span>
+                </div>
+                <div style="flex:1;">
+                    <label>Search Customer</label>
+                    <input type="text" id="searchCustomer" placeholder="🔍 Name or ID" oninput="filterCustomers()" class="search-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>👥 Manage Customers</h3>
+            <div class="form-row">
+                <input type="text" id="newCustomerName" placeholder="Customer Name">
+                <input type="text" id="newCustomerId" placeholder="Customer ID">
+                <input type="password" id="newCustomerPass" placeholder="Password">
+                <button class="btn" onclick="addCustomer()">➕ Add Customer</button>
+            </div>
+            <div class="form-row">
+                <input type="text" id="setCustId" placeholder="Customer ID">
+                <input type="password" id="setCustPass" placeholder="New Password">
+                <button class="btn btn-secondary" onclick="setCustomerPassword()">🔑 Reset Password</button>
+            </div>
+        </div>
+
+        <div class="two-column">
+            <div class="section">
+                <h3>📋 All Customers (Click Name)</h3>
+                <div class="table-container">
+                    <table id="customersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Qty(L)</th>
+                                <th>Rate</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>👤 Customer Details</h3>
+                <div id="noCustomerSelected">Click a customer name to view details</div>
+                <div id="customerDetailPanel" class="hidden">
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="selCustName">-</div>
+                            <div>Name</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="selCustQty">0L</div>
+                            <div>Total Milk</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="selCustTotal">₹0</div>
+                            <div>Total Amount</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="selCustBalance">₹0</div>
+                            <div>Balance Due</div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="selectedCustomerTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th><th>Qty</th><th>Rate</th><th>Total</th><th>Paid</th><th>Bal</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER DASHBOARD -->
+    <div id="customerDashboard" class="container dashboard">
+        <div class="header">
+            <div>
+                <h1>Customer Dashboard</h1>
+                <small id="custTodayDate">Today</small>
+            </div>
+            <div class="logout" onclick="logout()">Logout 🚪</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="custMilkQty">0L</div>
+                <div>Total Milk</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="custRate">₹60</div>
+                <div>Current Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="custTotal">₹0</div>
+                <div>Total Amount</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="custBalance">₹0</div>
+                <div>Balance Due</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Your Records</h3>
+            <div class="table-container">
+                <table id="customerRecordsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th><th>Qty</th><th>Rate</th><th>Total</th><th>Paid</th><th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATA & STATE
+        const defaultAdmin = { username: 'admin', password: 'admin123' };
+        const SECRET_CODE = '1234';
+
+        let adminData = JSON.parse(localStorage.getItem('adminData')) || defaultAdmin;
+        const demoCustomers = [
+            {id: 'CUST001', name: 'Raj Kumar', password: '1111', records: [
+                {date: '2026-01-10', qty: 25, rate: 60, paid: 1200},
+                {date: '2026-01-09', qty: 20, rate: 60, paid: 0}
+            ]},
+            {id: 'CUST002', name: 'Sunita Devi', password: '2222', records: [
+                {date: '2026-01-10', qty: 30, rate: 60, paid: 1500}
+            ]}
+        ];
+
+        let customers = JSON.parse(localStorage.getItem('customers')) || demoCustomers;
+        let milkRate = parseFloat(localStorage.getItem('milkRate')) || 60;
+        let currentRole = 'admin';
+        let currentUser = null;
+        let loggedInCustomerId = null;
+        let selectedCustomerIndex = null;
+
+        // INIT
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            updateCurrentRateDisplay();
+            renderAdminTable();
+            setTodayDates();
+        });
+
+        function setTodayDates() {
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-IN');
+            document.getElementById('todayDate').textContent = `Today: ${dateStr}`;
+            document.getElementById('custTodayDate').textContent = `Today: ${dateStr}`;
+        }
+
+        // LOGIN FUNCTIONS
+        function selectRole(event, role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            const label = document.getElementById('roleLabel');
+            const input = document.getElementById('username');
+            if (role === 'admin') {
+                label.textContent = 'Admin Username';
+                input.placeholder = 'Enter admin username';
+                document.getElementById('forgotPasswordBox').classList.remove('hidden');
+            } else {
+                label.textContent = 'Customer ID';
+                input.placeholder = 'Enter customer ID';
+                document.getElementById('forgotPasswordBox').classList.add('hidden');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (currentRole === 'admin') {
+                if (username === adminData.username && password === adminData.password) {
+                    currentUser = 'admin';
+                    showDashboard('admin');
+                } else {
+                    alert('❌ Invalid admin credentials!');
+                }
+            } else {
+                const customer = customers.find(c => c.id.toUpperCase() === username.toUpperCase());
+                if (customer && customer.password === password) {
+                    currentUser = customer;
+         loggedInCustomerId = customer.id;
+                    showCustomerDashboard(customer.id);
+                } else {
+                    alert('❌ Invalid customer ID or password!');
+                }
+            }
+        }
+
+        function showDashboard(role) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = role === 'admin' ? 'block' : 'none';
+            document.getElementById('customerDashboard').style.display = role === 'customer' ? 'block' : 'none';
+            if (role === 'admin') {
+                renderAdminTable();
+                clearSelectedCustomer();
+            }
+        }
+
+        function showCustomerDashboard(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            if (customer) {
+                updateCustomerStats(customer);
+                renderCustomerRecords(customer.records);
+                showDashboard('customer');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            loggedInCustomerId = null;
+            selectedCustomerIndex = null;
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('adminDashboard').style.display = 'none';
+            document.getElementById('customerDashboard').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            selectRole({target: document.querySelector('.role-btn.active')}, 'admin');
+        }
+
+        // PASSWORD RESET
+        function showAdminReset() {
+            document.getElementById('adminResetPanel').classList.toggle('hidden');
+        }
+
+        function resetAdminPassword() {
+            const secret = document.getElementById('adminSecret').value;
+            const newPass = document.getElementById('newAdminPass').value;
+            if (secret !== SECRET_CODE) {
+                alert('❌ Wrong secret code!');
+                return;
+            }
+            if (!newPass) {
+                alert('❌ Enter new password!');
+                return;
+            }
+            adminData.password = newPass;
+            localStorage.setItem('adminData', JSON.stringify(adminData));
+            alert('✅ Admin password reset successfully!');
+            document.getElementById('adminSecret').value = '';
+            document.getElementById('newAdminPass').value = '';
+            document.getElementById('adminResetPanel').classList.add('hidden');
+        }
+
+        // MILK RATE
+        function updateMilkRate() {
+            const newRate = parseFloat(document.getElementById('milkRate').value);
+            if (!newRate || newRate <= 0) {
+                alert('❌ Enter valid milk rate!');
+                return;
+            }
+            milkRate = newRate;
+            localStorage.setItem('milkRate', milkRate.toString());
+            updateCurrentRateDisplay();
+            renderAdminTable();
+            alert('✅ Milk rate updated!');
+            document.getElementById('milkRate').value = '';
+        }
+
+        function updateCurrentRateDisplay() {
+            document.getElementById('currentRate').textContent = `₹${milkRate.toFixed(2)}`;
+            document.getElementById('custRate').textContent = `₹${milkRate.toFixed(2)}`;
+        }
+
+        // CUSTOMER MANAGEMENT
+        function addCustomer() {
+            const name = document.getElementById('newCustomerName').value.trim();
+            const id = document.getElementById('newCustomerId').value.trim().toUpperCase();
+            const pass = document.getElementById('newCustomerPass').value;
+
+            if (!name || !id || !pass) {
+                alert('❌ Fill all fields!');
+                return;
+            }
+            if (customers.find(c => c.id === id)) {
+                alert('❌ Customer ID already exists!');
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            customers.push({
+                id, name, password: pass,
+                records: [{date: today, qty: 0, rate: milkRate, paid: 0}]
+            });
+            saveCustomers();
+            renderAdminTable();
+            document.getElementById('newCustomerName').value = '';
+            document.getElementById('newCustomerId').value = '';
+            document.getElementById('newCustomerPass').value = '';
+            alert('✅ Customer added!');
+        }
+
+        function setCustomerPassword() {
+            const id = document.getElementById('setCustId').value.trim().toUpperCase();
+            const pass = document.getElementById('setCustPass').value;
+            if (!id || !pass) {
+                alert('❌ Enter customer ID and password!');
+                return;
+            }
+            const customer = customers.find(c => c.id === id);
+            if (!customer) {
+                alert('❌ Customer not found!');
+                return;
+            }
+            customer.password = pass;
+            saveCustomers();
+            alert('✅ Customer password updated!');
+            document.getElementById('setCustId').value = '';
+            document.getElementById('setCustPass').value = '';
+        }
+
+        // ADMIN TABLE OPERATIONS
+        function renderAdminTable() {
+            const tbody = document.querySelector('#customersTable tbody');
+            tbody.innerHTML = '';
+
+            customers.forEach((customer, custIndex) => {
+                customer.records.forEach((record, recIndex) => {
+                    const total = (record.qty * record.rate).toFixed(2);
+                    const balance = (record.qty * record.rate - record.paid).toFixed(2);
+
+                    const row = tbody.insertRow();
+                    row.dataset.custIndex = custIndex;
+                    row.innerHTML = `
+                        <td data-label="ID">${customer.id}</td>
+                        <td data-label="Name"><span class="clickable-name" onclick="showFullCustomer(${custIndex})">${customer.name}</span></td>
+                        <td data-label="Date">${record.date}</td>
+                        <td data-label="Qty"><input type="number" value="${record.qty}" min="0" step="0.1" onchange="updateQty(${custIndex},${recIndex},this.value)" style="width:70px;"></td>
+                        <td data-label="Rate">₹${record.rate.toFixed(2)}</td>
+                        <td data-label="Total">₹${total}</td>
+                        <td data-label="Paid"><input type="number" value="${record.paid}" min="0" step="0.01" onchange="updatePaid(${custIndex},${recIndex},this.value)" style="width:70px;"></td>
+                        <td data-label="Balance">₹${balance}</td>
+                        <td data-label="Action">
+                            <button class="btn btn-secondary btn-small" onclick="addRecord(${custIndex})">➕</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteRecord(${custIndex},${recIndex})">🗑️</button>
+                        </td>
+                    `;
+                });
+            });
+            filterCustomers();
+        }
+
+        function updateQty(custIndex, recIndex, qty) {
+            customers[custIndex].records[recIndex].qty = parseFloat(qty) || 0;
+            saveCustomers();
+            renderAdminTable();
+            if (selectedCustomerIndex === custIndex) showFullCustomer(custIndex);
+        }
+
+        function updatePaid(custIndex, recIndex, paid) {
+            customers[custIndex].records[recIndex].paid = parseFloat(paid) || 0;
+            saveCustomers();
+            renderAdminTable();
+            if (selectedCustomerIndex === custIndex) showFullCustomer(custIndex);
+        }
+
+        function addRecord(custIndex) {
+            const today = new Date().toISOString().split('T')[0];
+            customers[custIndex].records.push({date: today, qty: 0, rate: milkRate, paid: 0});
+            saveCustomers();
+            renderAdminTable();
+            if (selectedCustomerIndex === custIndex) showFullCustomer(custIndex);
+        }
+
+        function deleteRecord(custIndex, recIndex) {
+            if (confirm('Delete this record?')) {
+                customers[custIndex].records.splice(recIndex, 1);
+                if (customers[custIndex].records.length === 0) {
+                    customers.splice(custIndex, 1);
+                    selectedCustomerIndex = null;
+                    clearSelectedCustomer();
+                }
+                saveCustomers();
+                renderAdminTable();
+            }
+        }
+
+        // SEARCH & FILTER
+        function filterCustomers() {
+            const term = document.getElementById('searchCustomer').value.trim().toUpperCase();
+            const rows = document.querySelectorAll('#customersTable tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 2) return;
+                const idText = cells[0].textContent.toUpperCase();
+                const nameText = cells[1].textContent.toUpperCase();
+                row.style.display = (idText.includes(term) || nameText.includes(term)) ? '' : 'none';
+            });
+        }// CUSTOMER DETAIL PANEL
+        function showFullCustomer(custIndex) {
+            selectedCustomerIndex = custIndex;
+            const customer = customers[custIndex];
+            document.getElementById('noCustomerSelected').classList.add('hidden');
+            document.getElementById('customerDetailPanel').classList.remove('hidden');
+
+            let totalQty = 0, totalAmount = 0, totalPaid = 0;
+            const tbody = document.querySelector('#selectedCustomerTable tbody');
+            tbody.innerHTML = '';
+
+            customer.records.forEach(record => {
+                const total = record.qty * record.rate;
+                const balance = total - record.paid;
+                totalQty += record.qty;
+                totalAmount += total;
+                totalPaid += record.paid;
+
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td data-label="Date">${record.date}</td>
+                    <td data-label="Qty">${record.qty}L</td>
+                    <td data-label="Rate">₹${record.rate.toFixed(2)}</td>
+                    <td data-label="Total">₹${total.toFixed(2)}</td>
+                    <td data-label="Paid">₹${record.paid.toFixed(2)}</td>
+                    <td data-label="Balance">₹${balance.toFixed(2)}</td>
+                `;
+            });
+
+            document.getElementById('selCustName').textContent = customer.name;
+            document.getElementById('selCustQty').textContent = `${totalQty.toFixed(1)}L`;
+            document.getElementById('selCustTotal').textContent = `₹${totalAmount.toFixed(2)}`;
+            document.getElementById('selCustBalance').textContent = `₹${(totalAmount - totalPaid).toFixed(2)}`;
+        }
+
+        function clearSelectedCustomer() {
+            document.getElementById('customerDetailPanel').classList.add('hidden');
+            document.getElementById('noCustomerSelected').classList.remove('hidden');
+        }
+
+        // CUSTOMER DASHBOARD
+        function updateCustomerStats(customer) {
+            let totalQty = 0, totalAmount = 0, totalPaid = 0;
+            customer.records.forEach(r => {
+                totalQty += r.qty;
+                totalAmount += r.qty * r.rate;
+                totalPaid += r.paid;
+            });
+            document.getElementById('custMilkQty').textContent = `${totalQty.toFixed(1)}L`;
+            document.getElementById('custTotal').textContent = `₹${totalAmount.toFixed(2)}`;
+            document.getElementById('custBalance').textContent = `₹${(totalAmount - totalPaid).toFixed(2)}`;
+        }
+
+        function renderCustomerRecords(records) {
+            const tbody = document.querySelector('#customerRecordsTable tbody');
+            tbody.innerHTML = '';
+            records.forEach(record => {
+                const total = record.qty * record.rate;
+                const balance = total - record.paid;
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td data-label="Date">${record.date}</td>
+                    <td data-label="Qty">${record.qty}L</td>
+                    <td data-label="Rate">₹${record.rate.toFixed(2)}</td>
+                    <td data-label="Total">₹${total.toFixed(2)}</td>
+                    <td data-label="Paid">₹${record.paid.toFixed(2)}</td>
+                    <td data-label="Balance">₹${balance.toFixed(2)}</td>
+                `;
+            });
+        }
+
+        function saveCustomers() {
+            localStorage.setItem('customers', JSON.stringify(customers));
+        }
+    </script>
+</body>
+</html>
