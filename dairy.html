@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Samra Dairy Cloud Ledger</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root { --primary: #1a252f; --accent: #27ae60; --bg: #f4f7f6; --white: #ffffff; --danger: #e74c3c; --warn: #f39c12; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; }
+        .top-nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--primary); color: white; display: flex; align-items: center; padding: 0 15px; z-index: 900; justify-content: space-between; }
+        #main-content { padding: 80px 15px 20px 15px; max-width: 900px; margin: auto; }
+        .card { background: var(--white); border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .receipt-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; background: white; }
+        th { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; text-align: left; }
+        td { padding: 8px; border: 1px solid #eee; position: relative; }
+        input { width: 100%; border: 1px solid #ddd; padding: 6px; border-radius: 4px; font-size: 14px; background: #fff; }
+        .btn { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-save { background: var(--accent); width: 100%; margin-top: 15px; font-size: 16px; height: 50px; }
+        .btn-export { background: #3498db; flex: 1; font-size: 12px; }
+        .export-group { display: flex; gap: 5px; margin-top: 15px; }
+        #sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; background: #2c3e50; color: white; transform: translateX(-100%); transition: 0.3s; z-index: 1000; padding: 15px; overflow-y: auto; }
+        #sidebar.active { transform: translateX(0); }
+        .search-box { width: 100%; padding: 10px; border-radius: 6px; border: none; margin: 10px 0; font-size: 14px; }
+        .history-item { background: rgba(255,255,255,0.1); padding: 12px; margin-bottom: 10px; border-radius: 8px; position: relative; border-left: 4px solid var(--accent); }
+        .history-content { cursor: pointer; }
+        .del-btn { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; }
+        .overlay { position: fixed; top: 0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:none; z-index:999; }
+        .overlay.active { display:block; }
+        .back-btn { background: var(--warn); color: white; width: 100%; margin-bottom: 10px; display: none; padding: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div id="sidebar">
+    <h3 style="margin-top:0;">RECORDS HISTORY</h3>
+    <input type="text" id="searchBar" class="search-box" placeholder="Search Month (e.g. Jan)..." onkeyup="renderHistory()">
+    <div style="display:flex; gap:5px; margin-bottom:15px;">
+        <button class="btn" style="background:#5d6d7e; flex:1" onclick="setSort('new')">Newest</button>
+        <button class="btn" style="background:#5d6d7e; flex:1" onclick="setSort('old')">Oldest</button>
+    </div>
+    <div id="archive-list"></div>
+    <button class="btn" style="background:var(--danger); width:100%; margin-top:20px;" onclick="deleteAllHistory()">CLEAR ALL DATABASE</button>
+</div>
+
+<div class="top-nav">
+    <div onclick="toggleSidebar()" style="cursor:pointer; font-size:20px;">☰ History</div>
+    <b style="font-size: 14px;">SAMRA DAIRY</b>
+    <button onclick="generateTable()" class="btn" style="background:var(--accent); padding: 5px 12px;">+ New Slot</button>
+</div>
+
+<div id="main-content">
+    <button id="backToCurrent" class="btn back-btn" onclick="generateTable()">← BACK TO DAILY ENTRY</button>
+    
+    <div class="card" id="capture-area">
+        <div class="receipt-header">
+            <h2 style="margin:0; color: var(--primary);">PARLAD SANDHWAN</h2>
+            <p id="period-text" style="font-weight:bold; color: var(--warn); font-size: 18px;">Period: Loading...</p>
+        </div>
+        
+        <table id="data-table">
+            <thead>
+                <tr><th>DATE</th><th>CM</th><th>FAT</th><th>RATE</th><th>TOTAL</th></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+            <tfoot>
+                <tr style="font-weight:bold; background:#f8f9fa;">
+                    <td colspan="4" style="text-align:right; padding: 15px;">GRAND TOTAL:</td>
+                    <td id="grand-total" style="color: var(--accent); font-size: 16px;">0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <button class="btn btn-save" id="saveActionBtn" onclick="saveToCloud()">SAVE TO CLOUD</button>
+        
+        <div class="export-group">
+            <button class="btn btn-export" onclick="exportPDF()">DOWNLOAD PDF</button>
+            <button class="btn btn-export" onclick="exportExcel()">EXCEL SHEET</button>
+            <button class="btn btn-export" onclick="exportJPG()">SAVE IMAGE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDsosuqGYSH_nYsgHau_NAnqS5qOonfRNc",
+        authDomain: "samradairy-60dad.firebaseapp.com",
+        databaseURL: "https://samradairy-60dad-default-rtdb.firebaseio.com",
+        projectId: "samradairy-60dad",
+        storageBucket: "samradairy-60dad.firebasestorage.app",
+        messagingSenderId: "901718277736",
+        appId: "1:901718277736:web:a690ad562a26563604369e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let cloudData = [];
+    let sortOrder = 'new';
+
+    function updateCalculations() {
+        let grandTotal = 0;
+        document.querySelectorAll('#table-body tr').forEach(row => {
+            const cm = parseFloat(row.querySelector('.cm-in').value) || 0;
+            const fat = parseFloat(row.querySelector('.fat-in').value) || 0;
+            let rate = fat > 0 ? (38.00 + ((fat - 4.0) * 10 * 0.25)) : 0;
+            let total = cm * rate;
+            row.querySelector('.rate-cell').innerText = rate.toFixed(2);
+            row.querySelector('.total-cell').innerText = total.toFixed(2);
+            grandTotal += total;
+        });
+        document.getElementById('grand-total').innerText = grandTotal.toFixed(2);
+    }
+
+    function generateTable() {
+        document.getElementById('backToCurrent').style.display = 'none';
+        document.getElementById('saveActionBtn').style.display = 'block';
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        
+        const now = new Date();
+        const day = now.getDate();
+        const monthIndex = now.getMonth();
+        const year = now.getFullYear();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        let startDay, endDay;
+
+        // Logic for 10-day intervals
+        if (day <= 10) {
+            startDay = 1;
+            endDay = 10;
+        } else if (day <= 20) {
+            startDay = 11;
+            endDay = 20;
+        } else {
+            startDay = 21;
+            endDay = new Date(year, monthIndex + 1, 0).getDate(); // Last day of month
+        }
+
+        document.getElementById('period-text').innerText = `${startDay} to ${endDay} ${months[monthIndex]} ${year}`;
+
+        for (let i = startDay; i <= endDay; i++) {
+            tbody.innerHTML += `<tr>
+                <td>${i}-${months[monthIndex]}</td>
+                <td><input type="number" step="0.1" class="cm-in" oninput="updateCalculations()"></td>
+                <td><input type="number" step="0.1" class="fat-in" oninput="updateCalculations()"></td>
+                <td class="rate-cell">0.00</td>
+                <td class="total-cell">0.00</td>
+            </tr>`;
+        }
+        document.getElementById('grand-total').innerText = "0.00";
+    }
+
+    function saveToCloud() {
+        const rows = [];
+        document.querySelectorAll('#table-body tr').forEach(tr => {
+            rows.push({
+                date: tr.cells[0].innerText,
+                cm: tr.querySelector('.cm-in').value || 0,
+                fat: tr.querySelector('.fat-in').value || 0,
+                rate: tr.querySelector('.rate-cell').innerText,
+                total: tr.querySelector('.total-cell').innerText
+            });
+        });
+        const period = document.getElementById('period-text').innerText;
+        db.ref('dairy_records').push({
+            period: period,
+            grandTotal: document.getElementById('grand-total').innerText,
+            data: rows,
+            timestamp: Date.now()
+        }).then(() => alert("Saved and Synced to Cloud!"));
+    }
+
+    function listenToCloud() {
+        db.ref('dairy_records').on('value', (snapshot) => {
+            cloudData = [];
+            snapshot.forEach(child => { cloudData.push({key: child.key, ...child.val()}); });
+            renderHistory();
+        });
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('archive-list');
+        const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+        list.innerHTML = '';
+        
+        let filtered = cloudData.filter(item => item.period.toLowerCase().includes(searchTerm));
+        if (sortOrder === 'new') filtered.sort((a,b) => b.timestamp - a.timestamp);
+        else filtered.sort((a,b) => a.timestamp - b.timestamp);
+
+        filtered.forEach(item => {
+            list.innerHTML += `<div class="history-item">
+                <div class="history-content" onclick="viewSavedRecord('${item.key}')">
+                    <strong>${item.period}</strong><br>
+                    <small style="color:#bdc3c7;">Bill Amount: ₹${item.grandTotal}</small>
+                </div>
+                <button class="del-btn" onclick="deleteIndividual('${item.key}')">Delete</button>
+            </div>`;
+        });
+    }
+
+    function viewSavedRecord(key) {
+        const record = cloudData.find(d => d.key === key);
+        document.getElementById('backToCurrent').style.display = 'block';
+        document.getElementById('saveActionBtn').style.display = 'none';
+        document.getElementById('period-text').innerText = record.period + " (Saved)";
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        record.data.forEach(row => {
+            tbody.innerHTML += `<tr>
+                <td>${row.date}</td>
+                <td><input type="number" class="cm-in" value="${row.cm}" disabled></td>
+                <td><input type="number" class="fat-in" value="${row.fat}" disabled></td>
+                <td class="rate-cell">${row.rate}</td>
+                <td class="total-cell">${row.total}</td>
+            </tr>`;
+        });
+        document.getElementById('grand-total').innerText = record.grandTotal;
+        toggleSidebar();
+    }
+
+    function deleteIndividual(key) { if(confirm("Permanently delete this record?")) db.ref('dairy_records/' + key).remove(); }
+    
+    function deleteAllHistory() { 
+        let pass = prompt("Enter Admin Password to DELETE EVERYTHING:");
+        if(pass === "1234") { // You can change this password
+            db.ref('dairy_records').remove();
+        } else {
+            alert("Wrong Password!");
+        }
+    }
+
+    function setSort(order) { sortOrder = order; renderHistory(); }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+
+    // --- UPDATED EXPORT FUNCTIONS ---
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("PARLAD SANDHWAN - SAMRA DAIRY", 14, 20);
+        doc.setFontSize(12);
+        doc.text("Period: " + document.getElementById('period-text').innerText, 14, 30);
+        
+        const rows = [];
+        document.querySelectorAll('#table-body tr').forEach(tr => {
+            rows.push([
+                tr.cells[0].innerText, 
+                tr.querySelector('.cm-in').value || "0", 
+                tr.querySelector('.fat-in').value || "0", 
+                tr.cells[3].innerText, 
+                tr.cells[4].innerText
+            ]);
+        });
+        rows.push([{ content: 'GRAND TOTAL:', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } }, { content: 'Rs. ' + document.getElementById('grand-total').innerText, styles: { fontStyle: 'bold' } }]);
+        
+        doc.autoTable({ 
+            head: [['Date', 'CM', 'Fat', 'Rate', 'Total']], 
+            body: rows, 
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [26, 37, 47] }
+        });
+        doc.save("Samra_Dairy_Bill.pdf");
+    }
+
+    function exportExcel() {
+        const rows = [['DATE', 'CM', 'FAT', 'RATE', 'TOTAL']];
+        document.querySelectorAll('#table-body tr').forEach(tr => {
+            rows.push([
+                tr.cells[0].innerText, 
+                tr.querySelector('.cm-in').value || "0", 
+                tr.querySelector('.fat-in').value || "0", 
+                tr.cells[3].innerText, 
+                tr.cells[4].innerText
+            ]);
+        });
+        rows.push(['','','','GRAND TOTAL:', document.getElementById('grand-total').innerText]);
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "DairyData");
+        XLSX.writeFile(wb, "Dairy_Bill.xlsx");
+    }
+
+    function exportJPG() {
+        const area = document.getElementById('capture-area');
+        html2canvas(area).then(canvas => {
+            let link = document.createElement('a');
+            link.download = 'Dairy_Bill.jpg';
+            link.href = canvas.toDataURL("image/jpeg", 1.0);
+            link.click();
+        });
+    }
+
+    window.onload = () => { generateTable(); listenToCloud(); };
+</script>
+</body>
+</html>
