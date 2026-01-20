@@ -2,801 +2,309 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Milk Management System - Billing</title>
-    <!-- jsPDF + html2canvas + SheetJS (Excel) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- [web:21] -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> <!-- [web:27] -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> <!-- [web:26] -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Samra Dairy Cloud Ledger</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{
-            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-            background:linear-gradient(135deg,#667eea,#764ba2);
-            min-height:100vh;
-            padding:10px;
-        }
-        .container{
-            max-width:100%;
-            width:100%;
-            background:#fff;
-            border-radius:12px;
-            box-shadow:0 10px 30px rgba(0,0,0,0.2);
-            overflow:hidden;
-        }
-        /* LOGIN */
-        .login-container{
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            min-height:90vh;
-            padding:20px;
-        }
-        .login-form{
-            background:#fff;
-            padding:25px;
-            border-radius:12px;
-            box-shadow:0 10px 25px rgba(0,0,0,0.1);
-            width:100%;
-            max-width:380px;
-        }
-        .role-selector{
-            display:flex;
-            gap:8px;
-            justify-content:center;
-            margin-bottom:20px;
-            flex-wrap:wrap;
-        }
-        .role-btn{
-            flex:1;
-            min-width:120px;
-            padding:10px 16px;
-            border:1px solid #ddd;
-            border-radius:8px;
-            cursor:pointer;
-            background:#f8f9fa;
-            font-size:14px;
-            font-weight:600;
-        }
-        .role-btn.active{background:#4CAF50;color:#fff;border-color:#4CAF50;}
-        .form-group{margin-bottom:15px;}
-        label{display:block;margin-bottom:6px;font-weight:600;color:#333;font-size:14px;}
-        input{
-            width:100%;
-            padding:12px;
-            border:2px solid #e1e5e9;
-            border-radius:8px;
-            font-size:15px;
-        }
-        input:focus{
-            outline:none;
-            border-color:#4CAF50;
-            box-shadow:0 0 0 3px rgba(76,175,80,0.12);
-        }
-        .btn{
-            padding:12px 18px;
-            border:none;
-            border-radius:8px;
-            background:#4CAF50;
-            color:#fff;
-            font-size:15px;
-            font-weight:600;
-            cursor:pointer;
-            margin-top:6px;
-            width:100%;
-        }
-        .btn:hover{background:#45a049;}
-        .btn-secondary{background:#2196F3;}
-        .btn-secondary:hover{background:#1976D2;}
-        .btn-danger{background:#f44336;}
-        .btn-danger:hover{background:#d32f2f;}
-        .btn-small{width:auto;font-size:12px;padding:6px 10px;margin:2px;}
-        .link-btn{
-            background:none;border:none;color:#2196F3;
-            cursor:pointer;font-size:13px;text-decoration:underline;padding:0;margin-top:5px;
-        }
-        /* DASHBOARDS */
-        .dashboard{display:none;padding:20px;}
-        .header{
-            background:linear-gradient(135deg,#4CAF50,#45a049);
-            color:#fff;
-            padding:15px 20px;
-            margin:-20px -20px 20px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            flex-wrap:wrap;
-            gap:8px;
-        }
-        .header h1{font-size:18px;}
-        .header small{font-size:12px;opacity:0.9;}
-        .logout{
-            background:rgba(255,255,255,0.2);
-            padding:8px 14px;
-            border-radius:20px;
-            cursor:pointer;
-            font-size:13px;
-        }
-        .section{
-            background:#f8f9fa;
-            padding:15px;
-            border-radius:10px;
-            margin-bottom:15px;
-        }
-        .section h3{margin-bottom:10px;font-size:16px;color:#333;}
-        .flex{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-        .form-row{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-            gap:10px;
-            margin-bottom:10px;
-        }
-        .stats{
-            display:grid;
-            grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-            gap:10px;
-            margin-bottom:15px;
-        }
-        .stat-card{
-            background:#fff;
-            padding:12px;
-            border-radius:8px;
-            text-align:center;
-            box-shadow:0 3px 10px rgba(0,0,0,0.08);
-        }
-        .stat-number{font-size:1.4em;font-weight:bold;color:#4CAF50;}
-        .two-column{
-            display:grid;
-            grid-template-columns:1fr;
-            gap:15px;
-        }
-        @media(min-width:900px){
-            .two-column{grid-template-columns:2fr 1.2fr;}
-        }
-        .table-container{
-            max-height:260px;
-            overflow-y:auto;
-            overflow-x:auto;
-        }
-        table{
-            width:100%;
-            border-collapse:collapse;
-            background:#fff;
-            font-size:13px;
-        }
-        th,td{
-            padding:8px 6px;
-            border-bottom:1px solid #e1e5e9;
-            text-align:left;
-        }
-        th{
-            background:#4CAF50;
-            color:#fff;
-            font-size:12px;
-            position:sticky;top:0;z-index:5;
-        }
-        tr:hover{background:#f8f9ff;}
-        .clickable-name{color:#2196F3;cursor:pointer;text-decoration:underline;font-weight:500;}
-        .hidden{display:none !important;}
-        /* MOBILE TABLE (card style) */
-        @media(max-width:768px){
-            table,thead,tbody,th,td,tr{display:block;}
-            thead tr{position:absolute;top:-9999px;left:-9999px;}
-            tr{
-                border:1px solid #ddd;
-                margin-bottom:10px;
-                border-radius:8px;
-                padding:8px;
-                background:#fff;
-            }
-            td{
-                border:none;
-                position:relative;
-                padding-left:40%;
-                text-align:right;
-                font-size:13px;
-            }
-            td:before{
-                content:attr(data-label);
-                position:absolute;
-                left:8px;
-                width:35%;
-                font-weight:600;
-                color:#555;
-                white-space:nowrap;
-            }
-        }
-        /* BILL AREA */
-        #billContainer{
-            background:#fff;
-            padding:10px;
-            border-radius:8px;
-            box-shadow:0 3px 10px rgba(0,0,0,0.08);
-        }
-        #billContainer h3{margin-bottom:5px;}
-        #billContainer p{font-size:13px;margin:2px 0;}
-        ::-webkit-scrollbar{width:6px;}
-        ::-webkit-scrollbar-thumb{background:#c1c1c1;border-radius:3px;}
-        ::-webkit-scrollbar-track{background:#f1f1f1;}
+        :root { --primary: #1a252f; --accent: #27ae60; --bg: #f4f7f6; --white: #ffffff; --danger: #e74c3c; --warn: #f39c12; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: #333; }
+        .top-nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: var(--primary); color: white; display: flex; align-items: center; padding: 0 15px; z-index: 900; justify-content: space-between; }
+        #main-content { padding: 80px 15px 20px 15px; max-width: 900px; margin: auto; }
+        .card { background: var(--white); border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .receipt-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; background: white; }
+        th { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; text-align: left; }
+        td { padding: 8px; border: 1px solid #eee; position: relative; }
+        input { width: 100%; border: 1px solid #ddd; padding: 6px; border-radius: 4px; font-size: 14px; background: #fff; }
+        .btn { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-save { background: var(--accent); width: 100%; margin-top: 15px; font-size: 16px; height: 50px; }
+        .btn-export { background: #3498db; flex: 1; font-size: 12px; }
+        .export-group { display: flex; gap: 5px; margin-top: 15px; }
+        #sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 300px; background: #2c3e50; color: white; transform: translateX(-100%); transition: 0.3s; z-index: 1000; padding: 15px; overflow-y: auto; }
+        #sidebar.active { transform: translateX(0); }
+        .search-box { width: 100%; padding: 10px; border-radius: 6px; border: none; margin: 10px 0; font-size: 14px; }
+        .history-item { background: rgba(255,255,255,0.1); padding: 12px; margin-bottom: 10px; border-radius: 8px; position: relative; border-left: 4px solid var(--accent); }
+        .history-content { cursor: pointer; }
+        .del-btn { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; }
+        .overlay { position: fixed; top: 0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:none; z-index:999; }
+        .overlay.active { display:block; }
+        .back-btn { background: var(--warn); color: white; width: 100%; margin-bottom: 10px; display: none; padding: 12px; }
     </style>
 </head>
 <body>
-<div id="loginScreen" class="container">
-    <div class="login-container">
-        <div class="login-form">
-            <h2 style="text-align:center;margin-bottom:15px;">🥛 Milk Management</h2>
-            <div class="role-selector">
-                <button class="role-btn active" onclick="selectRole(event,'admin')">Admin</button>
-                <button class="role-btn" onclick="selectRole(event,'customer')">Customer</button>
-            </div>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label id="roleLabel">Admin Username</label>
-                    <input type="text" id="username" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" class="btn">Login</button>
-            </form>
-            <div id="forgotPasswordBox">
-                <button class="link-btn" onclick="showAdminReset()">Forgot admin password?</button>
-                <div id="adminResetPanel" class="hidden">
-                    <small>Secret code: 1234</small>
-                    <div class="form-group">
-                        <input type="password" id="adminSecret" placeholder="Secret code">
-                    </div>
-                    <div class="form-group">
-                        <input type="password" id="newAdminPass" placeholder="New admin password">
-                    </div>
-                    <button class="btn btn-secondary" onclick="resetAdminPassword()">Reset Password</button>
-                </div>
-            </div>
-        </div>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div id="sidebar">
+    <h3 style="margin-top:0;">RECORDS HISTORY</h3>
+    <input type="text" id="searchBar" class="search-box" placeholder="Search Month (e.g. Jan)..." onkeyup="renderHistory()">
+    <div style="display:flex; gap:5px; margin-bottom:15px;">
+        <button class="btn" style="background:#5d6d7e; flex:1" onclick="setSort('new')">Newest</button>
+        <button class="btn" style="background:#5d6d7e; flex:1" onclick="setSort('old')">Oldest</button>
     </div>
+    <div id="archive-list"></div>
+    <button class="btn" style="background:var(--danger); width:100%; margin-top:20px;" onclick="deleteAllHistory()">CLEAR ALL DATABASE</button>
 </div>
 
-<!-- ADMIN DASHBOARD -->
-<div id="adminDashboard" class="container dashboard">
-    <div class="header">
-        <div>
-            <h1>Admin Dashboard</h1>
-            <small id="todayDate"></small>
-        </div>
-        <div class="logout" onclick="logout()">Logout</div>
-    </div>
-
-    <div class="section">
-        <h3>Rate & Search</h3>
-        <div class="flex">
-            <div style="flex:1;min-width:180px;">
-                <label>Milk Rate (₹/L)</label>
-                <input type="number" id="milkRate" step="0.01" placeholder="Rate">
-                <button class="btn btn-secondary btn-small" onclick="updateMilkRate()">Update</button>
-                <span id="currentRate" style="font-weight:600;color:#4CAF50;margin-left:6px;">₹60.00</span>
-            </div>
-            <div style="flex:1;">
-                <label>Search Customer</label>
-                <input type="text" id="searchCustomer" placeholder="Name or ID" oninput="filterCustomers()">
-            </div>
-        </div>
-    </div>
-
-    <div class="section">
-        <h3>Customer Management</h3>
-        <div class="form-row">
-            <input type="text" id="newCustomerName" placeholder="Customer name">
-            <input type="text" id="newCustomerId" placeholder="Customer ID">
-            <input type="password" id="newCustomerPass" placeholder="Password">
-            <button class="btn" onclick="addCustomer()">Add Customer</button>
-        </div>
-        <div class="form-row">
-            <input type="text" id="setCustId" placeholder="Customer ID">
-            <input type="password" id="setCustPass" placeholder="New password">
-            <button class="btn btn-secondary" onclick="setCustomerPassword()">Set / Reset Password</button>
-        </div>
-    </div>
-
-    <div class="two-column">
-        <!-- LEFT: RECORDS TABLE -->
-        <div class="section">
-            <h3>Records (click name)</h3>
-            <div class="table-container">
-                <table id="customersTable">
-                    <thead>
-                    <tr>
-                        <th>ID</th><th>Name</th><th>Date</th><th>Qty</th><th>Rate</th><th>Total</th><th>Paid</th><th>Bal</th><th>Act</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- RIGHT: DETAIL + BILL -->
-        <div class="section">
-            <h3>Customer Detail & Bill</h3>
-            <div id="noCustomerSelected">Select a customer name to view.</div>
-            <div id="customerDetailPanel" class="hidden">
-                <div class="stats">
-                    <div class="stat-card"><div class="stat-number" id="selCustName">-</div><div>Name</div></div>
-                    <div class="stat-card"><div class="stat-number" id="selCustQty">0 L</div><div>Total Milk</div></div>
-                    <div class="stat-card"><div class="stat-number" id="selCustTotal">₹0</div><div>Total Amt</div></div>
-                    <div class="stat-card"><div class="stat-number" id="selCustBalance">₹0</div><div>Balance</div></div>
-                </div>
-
-                <!-- BILL GENERATION -->
-                <div class="section" style="padding:10px;margin-bottom:10px;">
-                    <h4 style="margin-bottom:8px;">Generate Bill (by date)</h4>
-                    <div class="form-row">
-                        <div>
-                            <label>Start Date</label>
-                            <input type="date" id="billStartDate">
-                        </div>
-                        <div>
-                            <label>End Date</label>
-                            <input type="date" id="billEndDate">
-                        </div>
-                        <div>
-                            <label>&nbsp;</label>
-                            <button class="btn btn-secondary btn-small" onclick="generateBillForSelected()">Generate</button>
-                        </div>
-                    </div>
-                    <div class="flex">
-                        <button class="btn btn-small" onclick="downloadBillPDF('admin')">PDF</button>
-                        <button class="btn btn-small btn-secondary" onclick="downloadBillExcel('admin')">Excel</button>
-                        <button class="btn btn-small btn-danger" onclick="downloadBillImage('admin')">JPG</button>
-                    </div>
-                </div>
-
-                <!-- BILL DISPLAY -->
-                <div id="billContainer">
-                    <h3>Bill</h3>
-                    <p>No bill generated yet.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="top-nav">
+    <div onclick="toggleSidebar()" style="cursor:pointer; font-size:20px;">☰ History</div>
+    <b style="font-size: 14px;">SAMRA DAIRY</b>
+    <button onclick="generateTable()" class="btn" style="background:var(--accent); padding: 5px 12px;">+ New Slot</button>
 </div>
 
-<!-- CUSTOMER DASHBOARD -->
-<div id="customerDashboard" class="container dashboard">
-    <div class="header">
-        <div>
-            <h1>Customer Dashboard</h1>
-            <small id="custTodayDate"></small>
+<div id="main-content">
+    <button id="backToCurrent" class="btn back-btn" onclick="generateTable()">← BACK TO DAILY ENTRY</button>
+    
+    <div class="card" id="capture-area">
+        <div class="receipt-header">
+            <h2 style="margin:0; color: var(--primary);">PARLAD SANDHWAN</h2>
+            <p id="period-text" style="font-weight:bold; color: var(--warn); font-size: 18px;">Period: Loading...</p>
         </div>
-        <div class="logout" onclick="logout()">Logout</div>
-    </div>
+        
+        <table id="data-table">
+            <thead>
+                <tr><th>DATE</th><th>CM</th><th>FAT</th><th>RATE</th><th>TOTAL</th></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+            <tfoot>
+                <tr style="font-weight:bold; background:#f8f9fa;">
+                    <td colspan="4" style="text-align:right; padding: 15px;">GRAND TOTAL:</td>
+                    <td id="grand-total" style="color: var(--accent); font-size: 16px;">0.00</td>
+                </tr>
+            </tfoot>
+        </table>
 
-    <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="custMilkQty">0 L</div><div>Total Milk</div></div>
-        <div class="stat-card"><div class="stat-number" id="custRate">₹60</div><div>Current Rate</div></div>
-        <div class="stat-card"><div class="stat-number" id="custTotal">₹0</div><div>Total Amount</div></div>
-        <div class="stat-card"><div class="stat-number" id="custBalance">₹0</div><div>Balance</div></div>
-    </div>
-
-    <div class="section">
-        <h3>Your Records</h3>
-        <div class="table-container">
-            <table id="customerRecordsTable">
-                <thead>
-                <tr><th>Date</th><th>Qty</th><th>Rate</th><th>Total</th><th>Paid</th><th>Bal</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="section">
-        <h3>Your Generated Bill</h3>
-        <div class="flex" style="margin-bottom:8px;">
-            <button class="btn btn-small" onclick="downloadBillPDF('customer')">PDF</button>
-            <button class="btn btn-small btn-secondary" onclick="downloadBillExcel('customer')">Excel</button>
-            <button class="btn btn-small btn-danger" onclick="downloadBillImage('customer')">JPG</button>
-        </div>
-        <div id="customerBillContainer">
-            <p>No bill generated yet by admin.</p>
+        <button class="btn btn-save" id="saveActionBtn" onclick="saveToCloud()">SAVE TO CLOUD</button>
+        
+        <div class="export-group">
+            <button class="btn btn-export" onclick="exportPDF()">DOWNLOAD PDF</button>
+            <button class="btn btn-export" onclick="exportExcel()">EXCEL SHEET</button>
+            <button class="btn btn-export" onclick="exportJPG()">SAVE IMAGE</button>
         </div>
     </div>
 </div>
 
 <script>
-    const defaultAdmin = { username:'admin', password:'admin123' };
-    const SECRET_CODE = '1234';
-    let adminData = JSON.parse(localStorage.getItem('adminData')) || defaultAdmin;
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyDsosuqGYSH_nYsgHau_NAnqS5qOonfRNc",
+        authDomain: "samradairy-60dad.firebaseapp.com",
+        databaseURL: "https://samradairy-60dad-default-rtdb.firebaseio.com",
+        projectId: "samradairy-60dad",
+        storageBucket: "samradairy-60dad.firebasestorage.app",
+        messagingSenderId: "901718277736",
+        appId: "1:901718277736:web:a690ad562a26563604369e"
+    };
 
-    const demoCustomers = [
-        {id:'CUST001',name:'Raj Kumar',password:'1111',records:[
-                {date:'2026-01-10',qty:25,rate:60,paid:1200},
-                {date:'2026-01-09',qty:20,rate:60,paid:0}
-        ]},
-        {id:'CUST002',name:'Sunita Devi',password:'2222',records:[
-                {date:'2026-01-10',qty:30,rate:60,paid:1500}
-        ]}
-    ];
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let cloudData = [];
+    let sortOrder = 'new';
 
-    let customers = JSON.parse(localStorage.getItem('customers')) || demoCustomers;
-    let milkRate = parseFloat(localStorage.getItem('milkRate')) || 60;
-    let currentRole = 'admin';
-    let currentUser = null;
-    let loggedInCustomerId = null;
-    let selectedCustomerIndex = null;
-    // last generated bill (for both admin and customer)
-    let lastBill = null;
-
-    document.addEventListener('DOMContentLoaded',()=>{
-        document.getElementById('loginForm').addEventListener('submit',handleLogin);
-        updateCurrentRateDisplay();
-        renderAdminTable();
-        setTodayDates();
-    });
-
-    function setTodayDates(){
-        const t=new Date();const s=t.toLocaleDateString('en-IN');
-        document.getElementById('todayDate').textContent='Today: '+s;
-        document.getElementById('custTodayDate').textContent='Today: '+s;
+    function updateCalculations() {
+        let grandTotal = 0;
+        document.querySelectorAll('#table-body tr').forEach(row => {
+            const cm = parseFloat(row.querySelector('.cm-in').value) || 0;
+            const fat = parseFloat(row.querySelector('.fat-in').value) || 0;
+            let rate = fat > 0 ? (38.00 + ((fat - 4.0) * 10 * 0.25)) : 0;
+            let total = cm * rate;
+            row.querySelector('.rate-cell').innerText = rate.toFixed(2);
+            row.querySelector('.total-cell').innerText = total.toFixed(2);
+            grandTotal += total;
+        });
+        document.getElementById('grand-total').innerText = grandTotal.toFixed(2);
     }
 
-    function selectRole(ev,role){
-        currentRole=role;
-        document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
-        ev.target.classList.add('active');
-        const label=document.getElementById('roleLabel');
-        const u=document.getElementById('username');
-        if(role==='admin'){
-            label.textContent='Admin Username';
-            u.placeholder='Enter admin username';
-            document.getElementById('forgotPasswordBox').classList.remove('hidden');
-        }else{
-            label.textContent='Customer ID';
-            u.placeholder='Enter customer ID';
-            document.getElementById('forgotPasswordBox').classList.add('hidden');
+    function generateTable() {
+        document.getElementById('backToCurrent').style.display = 'none';
+        document.getElementById('saveActionBtn').style.display = 'block';
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        
+        const now = new Date();
+        const day = now.getDate();
+        const monthIndex = now.getMonth();
+        const year = now.getFullYear();
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        let startDay, endDay;
+
+        // Logic for 10-day intervals
+        if (day <= 10) {
+            startDay = 1;
+            endDay = 10;
+        } else if (day <= 20) {
+            startDay = 11;
+            endDay = 20;
+        } else {
+            startDay = 21;
+            endDay = new Date(year, monthIndex + 1, 0).getDate(); // Last day of month
         }
-    }
 
-    function handleLogin(e){
-        e.preventDefault();
-        const u=document.getElementById('username').value.trim();
-        const p=document.getElementById('password').value;
-        if(currentRole==='admin'){
-            if(u===adminData.username && p===adminData.password){
-                currentUser='admin';
-                showDashboard('admin');
-            }else alert('Invalid admin credentials');
-        }else{
-            const c=customers.find(x=>x.id.toUpperCase()===u.toUpperCase());
-            if(c && c.password===p){
-                currentUser=c;
-                loggedInCustomerId=c.id;
-                showCustomerDashboard(c.id);
-            }else alert('Invalid customer ID or password');
+        document.getElementById('period-text').innerText = `${startDay} to ${endDay} ${months[monthIndex]} ${year}`;
+
+        for (let i = startDay; i <= endDay; i++) {
+            tbody.innerHTML += `<tr>
+                <td>${i}-${months[monthIndex]}</td>
+                <td><input type="number" step="0.1" class="cm-in" oninput="updateCalculations()"></td>
+                <td><input type="number" step="0.1" class="fat-in" oninput="updateCalculations()"></td>
+                <td class="rate-cell">0.00</td>
+                <td class="total-cell">0.00</td>
+            </tr>`;
         }
+        document.getElementById('grand-total').innerText = "0.00";
     }
 
-    function showDashboard(role){
-        document.getElementById('loginScreen').style.display='none';
-        document.getElementById('adminDashboard').style.display=role==='admin'?'block':'none';
-        document.getElementById('customerDashboard').style.display=role==='customer'?'block':'none';
-        if(role==='admin'){renderAdminTable();clearSelectedCustomer();}
-    }
-
-    function showCustomerDashboard(id){
-        const c=customers.find(x=>x.id===id);
-        if(c){
-            updateCustomerStats(c);
-            renderCustomerRecords(c.records);
-            // show last bill if exists
-            if(lastBill && lastBill.customerId===id){
-                renderBillHTML(lastBill,'customerBillContainer');
-            }else{
-                document.getElementById('customerBillContainer').innerHTML='<p>No bill generated yet by admin.</p>';
-            }
-            showDashboard('customer');
-        }
-    }
-
-    function logout(){
-        currentUser=null;loggedInCustomerId=null;selectedCustomerIndex=null;
-        document.getElementById('loginScreen').style.display='block';
-        document.getElementById('adminDashboard').style.display='none';
-        document.getElementById('customerDashboard').style.display='none';
-        document.getElementById('loginForm').reset();
-    }
-
-    function showAdminReset(){
-        document.getElementById('adminResetPanel').classList.toggle('hidden');
-    }
-
-    function resetAdminPassword(){
-        const s=document.getElementById('adminSecret').value;
-        const np=document.getElementById('newAdminPass').value;
-        if(s!==SECRET_CODE){alert('Wrong secret code');return;}
-        if(!np){alert('Enter new password');return;}
-        adminData.password=np;
-        localStorage.setItem('adminData',JSON.stringify(adminData));
-        alert('Admin password changed');
-        document.getElementById('adminSecret').value='';
-        document.getElementById('newAdminPass').value='';
-        document.getElementById('adminResetPanel').classList.add('hidden');
-    }
-
-    function updateMilkRate(){
-        const v=parseFloat(document.getElementById('milkRate').value);
-        if(!v||v<=0){alert('Enter valid rate');return;}
-        milkRate=v;
-        localStorage.setItem('milkRate',milkRate.toString());
-        updateCurrentRateDisplay();
-        renderAdminTable();
-        alert('Milk rate updated');
-    }
-
-    function updateCurrentRateDisplay(){
-        document.getElementById('currentRate').textContent='₹'+milkRate.toFixed(2);
-        document.getElementById('custRate').textContent='₹'+milkRate.toFixed(2);
-    }
-
-    function addCustomer(){
-        const name=document.getElementById('newCustomerName').value.trim();
-        const id=document.getElementById('newCustomerId').value.trim().toUpperCase();
-        const pass=document.getElementById('newCustomerPass').value;
-        if(!name||!id||!pass){alert('Fill all fields');return;}
-        if(customers.find(c=>c.id===id)){alert('ID already exists');return;}
-        const today=new Date().toISOString().split('T')[0];
-        customers.push({id,name,password:pass,records:[{date:today,qty:0,rate:milkRate,paid:0}]});
-        saveCustomers();renderAdminTable();
-        document.getElementById('newCustomerName').value='';
-        document.getElementById('newCustomerId').value='';
-        document.getElementById('newCustomerPass').value='';
-        alert('Customer added');
-    }
-
-    function setCustomerPassword(){
-        const id=document.getElementById('setCustId').value.trim().toUpperCase();
-        const pass=document.getElementById('setCustPass').value;
-        if(!id||!pass){alert('Enter ID and password');return;}
-        const c=customers.find(x=>x.id===id);
-        if(!c){alert('Customer not found');return;}
-        c.password=pass;saveCustomers();alert('Password updated');
-    }
-
-    function renderAdminTable(){
-        const tbody=document.querySelector('#customersTable tbody');
-        tbody.innerHTML='';
-        customers.forEach((c,ci)=>{
-            c.records.forEach((r,ri)=>{
-                const total=r.qty*r.rate;
-                const bal=total-r.paid;
-                const row=tbody.insertRow();
-                row.innerHTML=`
-<td data-label="ID">${c.id}</td>
-<td data-label="Name"><span class="clickable-name" onclick="showFullCustomer(${ci})">${c.name}</span></td>
-<td data-label="Date">${r.date}</td>
-<td data-label="Qty"><input type="number" value="${r.qty}" min="0" step="0.1" style="width:70px;" onchange="updateQty(${ci},${ri},this.value)"></td>
-<td data-label="Rate">₹${r.rate.toFixed(2)}</td>
-<td data-label="Total">₹${total.toFixed(2)}</td>
-<td data-label="Paid"><input type="number" value="${r.paid}" min="0" step="0.01" style="width:70px;" onchange="updatePaid(${ci},${ri},this.value)"></td>
-<td data-label="Bal">₹${bal.toFixed(2)}</td>
-<td data-label="Act">
-<button class="btn btn-secondary btn-small" onclick="addRecord(${ci})">+</button>
-<button class="btn btn-danger btn-small" onclick="deleteRecord(${ci},${ri})">X</button>
-</td>`;
+    function saveToCloud() {
+        const rows = [];
+        document.querySelectorAll('#table-body tr').forEach(tr => {
+            rows.push({
+                date: tr.cells[0].innerText,
+                cm: tr.querySelector('.cm-in').value || 0,
+                fat: tr.querySelector('.fat-in').value || 0,
+                rate: tr.querySelector('.rate-cell').innerText,
+                total: tr.querySelector('.total-cell').innerText
             });
         });
-        filterCustomers();
+        const period = document.getElementById('period-text').innerText;
+        db.ref('dairy_records').push({
+            period: period,
+            grandTotal: document.getElementById('grand-total').innerText,
+            data: rows,
+            timestamp: Date.now()
+        }).then(() => alert("Saved and Synced to Cloud!"));
     }
 
-    function updateQty(ci,ri,val){
-        customers[ci].records[ri].qty=parseFloat(val)||0;
-        saveCustomers();renderAdminTable();
-        if(selectedCustomerIndex===ci)showFullCustomer(ci);
-    }
-    function updatePaid(ci,ri,val){
-        customers[ci].records[ri].paid=parseFloat(val)||0;
-        saveCustomers();renderAdminTable();
-        if(selectedCustomerIndex===ci)showFullCustomer(ci);
-    }
-    function addRecord(ci){
-        const today=new Date().toISOString().split('T')[0];
-        customers[ci].records.push({date:today,qty:0,rate:milkRate,paid:0});
-        saveCustomers();renderAdminTable();
-        if(selectedCustomerIndex===ci)showFullCustomer(ci);
-    }
-    function deleteRecord(ci,ri){
-        if(!confirm('Delete record?'))return;
-        customers[ci].records.splice(ri,1);
-        if(customers[ci].records.length===0){customers.splice(ci,1);selectedCustomerIndex=null;clearSelectedCustomer();}
-        saveCustomers();renderAdminTable();
-    }
-
-    function filterCustomers(){
-        const term=document.getElementById('searchCustomer').value.trim().toUpperCase();
-        const rows=document.querySelectorAll('#customersTable tbody tr');
-        rows.forEach(r=>{
-            const tds=r.querySelectorAll('td');
-            if(tds.length<2)return;
-            const id=tds[0].innerText.toUpperCase();
-            const name=tds[1].innerText.toUpperCase();
-            r.style.display=(id.includes(term)||name.includes(term))?'':'none';
+    function listenToCloud() {
+        db.ref('dairy_records').on('value', (snapshot) => {
+            cloudData = [];
+            snapshot.forEach(child => { cloudData.push({key: child.key, ...child.val()}); });
+            renderHistory();
         });
     }
 
-    function showFullCustomer(ci){
-        selectedCustomerIndex=ci;
-        const c=customers[ci];
-        document.getElementById('noCustomerSelected').classList.add('hidden');
-        document.getElementById('customerDetailPanel').classList.remove('hidden');
-        let tq=0,ta=0,tp=0;
-        c.records.forEach(r=>{tq+=r.qty;ta+=r.qty*r.rate;tp+=r.paid;});
-        document.getElementById('selCustName').textContent=c.name;
-        document.getElementById('selCustQty').textContent=tq.toFixed(1)+' L';
-        document.getElementById('selCustTotal').textContent='₹'+ta.toFixed(2);
-        document.getElementById('selCustBalance').textContent='₹'+(ta-tp).toFixed(2);
-    }
-    function clearSelectedCustomer(){
-        document.getElementById('customerDetailPanel').classList.add('hidden');
-        document.getElementById('noCustomerSelected').classList.remove('hidden');
-    }
+    function renderHistory() {
+        const list = document.getElementById('archive-list');
+        const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+        list.innerHTML = '';
+        
+        let filtered = cloudData.filter(item => item.period.toLowerCase().includes(searchTerm));
+        if (sortOrder === 'new') filtered.sort((a,b) => b.timestamp - a.timestamp);
+        else filtered.sort((a,b) => a.timestamp - b.timestamp);
 
-    function updateCustomerStats(c){
-        let tq=0,ta=0,tp=0;
-        c.records.forEach(r=>{tq+=r.qty;ta+=r.qty*r.rate;tp+=r.paid;});
-        document.getElementById('custMilkQty').textContent=tq.toFixed(1)+' L';
-        document.getElementById('custTotal').textContent='₹'+ta.toFixed(2);
-        document.getElementById('custBalance').textContent='₹'+(ta-tp).toFixed(2);
-    }
-    function renderCustomerRecords(records){
-        const tbody=document.querySelector('#customerRecordsTable tbody');
-        tbody.innerHTML='';
-        records.forEach(r=>{
-            const t=r.qty*r.rate;const b=t-r.paid;
-            const row=tbody.insertRow();
-            row.innerHTML=`
-<td data-label="Date">${r.date}</td>
-<td data-label="Qty">${r.qty}</td>
-<td data-label="Rate">₹${r.rate.toFixed(2)}</td>
-<td data-label="Total">₹${t.toFixed(2)}</td>
-<td data-label="Paid">₹${r.paid.toFixed(2)}</td>
-<td data-label="Bal">₹${b.toFixed(2)}</td>`;
+        filtered.forEach(item => {
+            list.innerHTML += `<div class="history-item">
+                <div class="history-content" onclick="viewSavedRecord('${item.key}')">
+                    <strong>${item.period}</strong><br>
+                    <small style="color:#bdc3c7;">Bill Amount: ₹${item.grandTotal}</small>
+                </div>
+                <button class="del-btn" onclick="deleteIndividual('${item.key}')">Delete</button>
+            </div>`;
         });
     }
-    function saveCustomers(){localStorage.setItem('customers',JSON.stringify(customers));}
 
-    // ---------- BILL GENERATION ----------
-    function generateBillForSelected(){
-        if(selectedCustomerIndex===null){alert('Select customer first');return;}
-        const c=customers[selectedCustomerIndex];
-        const sd=document.getElementById('billStartDate').value;
-        const ed=document.getElementById('billEndDate').value;
-        if(!sd||!ed){alert('Select start and end date');return;}
-        const sDate=new Date(sd), eDate=new Date(ed);
-        if(sDate>eDate){alert('Start date should be <= end date');return;}
-
-        const filtered=c.records.filter(r=>{
-            const d=new Date(r.date);
-            return d>=sDate && d<=eDate;
+    function viewSavedRecord(key) {
+        const record = cloudData.find(d => d.key === key);
+        document.getElementById('backToCurrent').style.display = 'block';
+        document.getElementById('saveActionBtn').style.display = 'none';
+        document.getElementById('period-text').innerText = record.period + " (Saved)";
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        record.data.forEach(row => {
+            tbody.innerHTML += `<tr>
+                <td>${row.date}</td>
+                <td><input type="number" class="cm-in" value="${row.cm}" disabled></td>
+                <td><input type="number" class="fat-in" value="${row.fat}" disabled></td>
+                <td class="rate-cell">${row.rate}</td>
+                <td class="total-cell">${row.total}</td>
+            </tr>`;
         });
-        if(filtered.length===0){
-            alert('No records in this date range');
-        }
+        document.getElementById('grand-total').innerText = record.grandTotal;
+        toggleSidebar();
+    }
 
-        let tq=0,ta=0,tp=0;
-        filtered.forEach(r=>{tq+=r.qty;ta+=r.qty*r.rate;tp+=r.paid;});
-        const balance=ta-tp;
-
-        lastBill={
-            customerId:c.id,
-            customerName:c.name,
-            startDate:sd,
-            endDate:ed,
-            records:filtered,
-            totalQty:tq,
-            totalAmount:ta,
-            totalPaid:tp,
-            balance:balance
-        };
-
-        renderBillHTML(lastBill,'billContainer');
-        // also update customer view if that customer is logged in
-        if(currentUser && currentUser.id===c.id){
-            renderBillHTML(lastBill,'customerBillContainer');
+    function deleteIndividual(key) { if(confirm("Permanently delete this record?")) db.ref('dairy_records/' + key).remove(); }
+    
+    function deleteAllHistory() { 
+        let pass = prompt("Enter Admin Password to DELETE EVERYTHING:");
+        if(pass === "1234") { // You can change this password
+            db.ref('dairy_records').remove();
+        } else {
+            alert("Wrong Password!");
         }
     }
 
-    function renderBillHTML(bill,containerId){
-        const div=document.getElementById(containerId);
-        if(!bill || bill.records.length===0){
-            div.innerHTML='<p>No bill generated.</p>';return;
-        }
-        let rows='';
-        bill.records.forEach(r=>{
-            const t=r.qty*r.rate;const bal=t-r.paid;
-            rows+=`<tr>
-<td>${r.date}</td>
-<td>${r.qty}</td>
-<td>₹${r.rate.toFixed(2)}</td>
-<td>₹${t.toFixed(2)}</td>
-<td>₹${r.paid.toFixed(2)}</td>
-<td>₹${bal.toFixed(2)}</td>
-</tr>`;
+    function setSort(order) { sortOrder = order; renderHistory(); }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+
+    // --- UPDATED EXPORT FUNCTIONS ---
+    function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("PARLAD SANDHWAN - SAMRA DAIRY", 14, 20);
+        doc.setFontSize(12);
+        doc.text("Period: " + document.getElementById('period-text').innerText, 14, 30);
+        
+        const rows = [];
+        document.querySelectorAll('#table-body tr').forEach(tr => {
+            rows.push([
+                tr.cells[0].innerText, 
+                tr.querySelector('.cm-in').value || "0", 
+                tr.querySelector('.fat-in').value || "0", 
+                tr.cells[3].innerText, 
+                tr.cells[4].innerText
+            ]);
         });
-        div.innerHTML=`
-<h3>Milk Bill</h3>
-<p><strong>Customer:</strong> ${bill.customerName} (${bill.customerId})</p>
-<p><strong>Duration:</strong> ${bill.startDate} to ${bill.endDate}</p>
-<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px;">
-<thead><tr style="background:#eee;">
-<th style="border:1px solid #ccc;padding:4px;">Date</th>
-<th style="border:1px solid #ccc;padding:4px;">Qty</th>
-<th style="border:1px solid #ccc;padding:4px;">Rate</th>
-<th style="border:1px solid #ccc;padding:4px;">Total</th>
-<th style="border:1px solid #ccc;padding:4px;">Paid</th>
-<th style="border:1px solid #ccc;padding:4px;">Balance</th>
-</tr></thead>
-<tbody>${rows}</tbody></table>
-<p style="margin-top:6px;"><strong>Total Qty:</strong> ${bill.totalQty.toFixed(1)} L</p>
-<p><strong>Total Amount:</strong> ₹${bill.totalAmount.toFixed(2)}</p>
-<p><strong>Total Paid:</strong> ₹${bill.totalPaid.toFixed(2)}</p>
-<p><strong>Balance:</strong> ₹${bill.balance.toFixed(2)}</p>`;
+        rows.push([{ content: 'GRAND TOTAL:', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } }, { content: 'Rs. ' + document.getElementById('grand-total').innerText, styles: { fontStyle: 'bold' } }]);
+        
+        doc.autoTable({ 
+            head: [['Date', 'CM', 'Fat', 'Rate', 'Total']], 
+            body: rows, 
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [26, 37, 47] }
+        });
+        doc.save("Samra_Dairy_Bill.pdf");
     }
 
-    // ---------- DOWNLOAD: PDF / IMAGE / EXCEL ----------
-    async function downloadBillPDF(role){
-        if(!lastBill){alert('No bill to download');return;}
-        const elementId = role==='admin' ? 'billContainer' : 'customerBillContainer';
-        const element=document.getElementById(elementId);
-        const { jsPDF } = window.jspdf; // [web:21]
-        const canvas=await html2canvas(element); // [web:21][web:27]
-        const imgData=canvas.toDataURL('image/png');
-        const pdf=new jsPDF('p','mm','a4');
-        const pageWidth=pdf.internal.pageSize.getWidth();
-        const pageHeight=pdf.internal.pageSize.getHeight();
-        const imgProps=pdf.getImageProperties(imgData);
-        const ratio=imgProps.height/imgProps.width;
-        const imgHeight=pageWidth*ratio;
-        pdf.addImage(imgData,'PNG',0,0,pageWidth,imgHeight);
-        pdf.save(`bill_${lastBill.customerId}_${lastBill.startDate}_${lastBill.endDate}.pdf`);
+    function exportExcel() {
+        const rows = [['DATE', 'CM', 'FAT', 'RATE', 'TOTAL']];
+        document.querySelectorAll('#table-body tr').forEach(tr => {
+            rows.push([
+                tr.cells[0].innerText, 
+                tr.querySelector('.cm-in').value || "0", 
+                tr.querySelector('.fat-in').value || "0", 
+                tr.cells[3].innerText, 
+                tr.cells[4].innerText
+            ]);
+        });
+        rows.push(['','','','GRAND TOTAL:', document.getElementById('grand-total').innerText]);
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "DairyData");
+        XLSX.writeFile(wb, "Dairy_Bill.xlsx");
     }
 
-    async function downloadBillImage(role){
-        if(!lastBill){alert('No bill to download');return;}
-        const elementId = role==='admin' ? 'billContainer' : 'customerBillContainer';
-        const element=document.getElementById(elementId);
-        const canvas=await html2canvas(element); // [web:27]
-        const link=document.createElement('a');
-        link.href=canvas.toDataURL('image/jpeg');
-        link.download=`bill_${lastBill.customerId}_${lastBill.startDate}_${lastBill.endDate}.jpg`;
-        link.click();
+    function exportJPG() {
+        const area = document.getElementById('capture-area');
+        html2canvas(area).then(canvas => {
+            let link = document.createElement('a');
+            link.download = 'Dairy_Bill.jpg';
+            link.href = canvas.toDataURL("image/jpeg", 1.0);
+            link.click();
+        });
     }
 
-    function downloadBillExcel(role){
-        if(!lastBill){alert('No bill to download');return;}
-        const data = lastBill.records.map(r=>{
-            const total=r.qty*r.rate;const bal=total-r.paid;
-            return {
-                Date:r.date,
-                Quantity:r.qty,
-                Rate:r.rate,
-                Total:total,
-                Paid:r.paid,
-                Balance:bal
-            };
-        });
-        // add totals row
-        data.push({
-            Date:'TOTAL',
-            Quantity:lastBill.totalQty,
-            Rate:'',
-            Total:lastBill.totalAmount,
-            Paid:lastBill.totalPaid,
-            Balance:lastBill.balance
-        });
-        const ws=XLSX.utils.json_to_sheet(data); // [web:26]
-        const wb=XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb,ws,'Bill');
-        XLSX.writeFile(wb,`bill_${lastBill.customerId}_${lastBill.startDate}_${lastBill.endDate}.xlsx`);
-    }
+    window.onload = () => { generateTable(); listenToCloud(); };
 </script>
 </body>
 </html>
